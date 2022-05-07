@@ -1,0 +1,2 @@
+Teacher|Evan|1|2021|Male|1001|Computer Science|DEC
+Staff|Also Evan|2|2021|Male|1003|H|21.00
