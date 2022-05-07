@@ -1,3 +1,6 @@
+/**
+ * Full time teacher, paid based on their degree.
+ */
 public class FullTimeTeacher extends Teacher {
 
     public FullTimeTeacher(String name, int age, int hiredYear, String gender, int id, String specialty, String degree) {

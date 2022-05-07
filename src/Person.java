@@ -1,3 +1,6 @@
+/**
+ * Basic Person class, with some characteristics and an abstract method.
+ */
 public abstract class Person {
 
     private String name;

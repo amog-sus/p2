@@ -3,26 +3,35 @@ import java.util.List;
 
 public class Main {
 
+    /**
+     * Test functionality.
+     */
     public static void main(String[] args) {
-        Teacher t = new Teacher("Evan", 1, 2021, "Male", 1001, "Computer Science", "DEC", true);
-        Staff s = new Staff("Also Evan", 2, 2021, "Male", 1003, "H", 21);
+        FullTimeTeacher t1 = new FullTimeTeacher("Evan", 1, 2021, "Male", 1001, "Computer Science", "PhD");
+        PartTimeTeacher t2 = new PartTimeTeacher("Another Evan", 14, 2017, "Male", 1043, "Math", "Bachelor", 32);
+        Staff s1 = new Staff("Also Evan", 2, 2021, "Male", 1003, "H", 21);
+        Staff s2 = new Staff("Yet Another Evan", 17, 2004, "Male", 1024, "mogus", 45);
 
-        List<Teacher> teacherList = new ArrayList<Teacher>();
-        teacherList.add(t);
+        System.out.println(t1.computePayRoll());
+        System.out.println(t2.computePayRoll());
+        System.out.println(s2.computePayRoll()); // should cap at 40 hours
+        System.out.println(t1.determineBonus()); // test abstract method
 
-        List<Staff> staffList = new ArrayList<Staff>();
-        staffList.add(s);
+        List<Teacher> csTeachers = new ArrayList<>();
+        csTeachers.add(t1);
+        List<Teacher> mathTeachers = new ArrayList<>();
+        mathTeachers.add(t2);
 
-        Department d = new Department("Computer Science", 101, 1001, teacherList, staffList);
+        List<Staff> csStaff = new ArrayList<>();
+        csStaff.add(s1);
+        List<Staff> mathStaff = new ArrayList<>();
+        mathStaff.add(s2);
 
-        System.out.println(d);
+        Department cs = new Department("Computer Science", 101, 1001, csTeachers, csStaff, "csDept.txt");
+        Department math = new Department("Math", 102, 1043, mathTeachers, mathStaff, "mathDept.txt");
 
-        d.saveDept("testFile.txt");
-
-        Department d2 = new Department(null, 0, 1, null, null);
-        d2.loadDept("testFile.txt");
-
-        System.out.println(d2);
+        System.out.println(cs);
+        System.out.println(math);
     }
 
 }

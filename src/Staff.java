@@ -9,6 +9,11 @@ public class Staff extends Person implements Payable {
         this.hoursWorked = hoursWorked;
     }
 
+    /**
+     * Determine pay based on hours worked.
+     * Pay is semantically equivalent to (hoursWorked * 32 * 2) * 0.75
+     * @return Pay
+     */
     @Override
     public double computePayRoll() {
         return 48 * ((hoursWorked > 40) ? 40 : hoursWorked);
@@ -20,6 +25,10 @@ public class Staff extends Person implements Payable {
                 getId(), duty, hoursWorked);
     }
 
+    /**
+     * Determine bonus pay based on year hired.
+     * @return Bonus pay
+     */
     @Override
     double determineBonus() {
         return (hoursWorked * Math.log(getHiredYear() - 1990));
