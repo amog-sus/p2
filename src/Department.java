@@ -1,10 +1,16 @@
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Department with a name, ID, dean, and teachers/staff. Automatically saves to a new file after modifying staff lists.
@@ -24,13 +30,17 @@ public class Department {
         this.departmentName = departmentName;
         this.departmentId = departmentId;
         this.deanId = deanId;
-        this.teachers = teachers;
-        this.staff = staff;
         this.saveFile = saveFile;
 
         loadDept(saveFile);
-        if ((teachers != null || !teachers.isEmpty()) || (staff == null || !staff.isEmpty())) {
+        if ((this.teachers != null) && (this.staff != null)) {
             saveDept(saveFile);
+        }
+        for (Teacher t : teachers) {
+            addTeacher(t);
+        }
+        for (Staff s : staff) {
+            addStaff(s);
         }
     }
 
@@ -47,8 +57,9 @@ public class Department {
             saveDept(saveFile);
         }
         else {
-            throw new DepartmentException(String.format(
-                    "Teacher with ID %d is already in this department!", teacher.getId()));
+            System.out.println(String.format(
+                    "Teacher with ID %d is already in this department,"
+                            + " not adding again.", teacher.getId()));
         }
     }
 
@@ -60,7 +71,15 @@ public class Department {
         if (staff == null) {
             staff = new ArrayList<>();
         }
-        staff.add(staffMember);
+        if (!staffMemberExists(staffMember.getId())) {
+            staff.add(staffMember);
+            saveDept(saveFile);
+        }
+        else {
+            System.out.println(String.format(
+                    "Staff member with ID %d is already in this department,"
+                            + " not adding again.", staffMember.getId()));
+        }
     }
 
     /**
@@ -68,7 +87,11 @@ public class Department {
      * @param teacher Teacher to remove
      */
     public void removeTeacher(Teacher teacher) {
-        teachers.remove(teacher);
+        for (int i = 0; i < teachers.size(); i++) {
+            if (teacher.getId() == teachers.get(i).getId()) {
+                teachers.remove(teachers.get(i));
+            }
+        }
         saveDept(saveFile);
     }
 
@@ -77,7 +100,13 @@ public class Department {
      * @param staffMember Staff member to remove
      */
     public void removeStaff(Staff staffMember) {
-        staff.remove(staffMember);
+        if (staff == null) 
+            return;
+        for (int i = 0; i < staff.size(); i++) {
+            if (staffMember.getId() == staff.get(i).getId()) {
+                staff.remove(staff.get(i));
+            }
+        }
         saveDept(saveFile);
     }
 
@@ -86,28 +115,34 @@ public class Department {
      * @param name File name to read from
      */
     public void loadDept(String name) {
-        File deptFile = new File(name);
+        File tFile = new File(name + "_teachers.ser");
+        File sFile = new File(name + "_staff.ser");
 
-        try (Scanner read = new Scanner(deptFile)){
-            while (read.hasNextLine()) {
-                String[] attr = read.nextLine().split("\\|");
-                if (attr[0].equals("Staff") && !staffMemberExists(attr[2])) {
-                    addStaff(new Staff(attr[1], Integer.parseInt(attr[2]), Integer.parseInt(attr[3]), attr[4],
-                            Integer.parseInt(attr[5]), attr[6], Double.parseDouble(attr[7])));
-                } else if (attr[0].equals("Teacher")) {
-                    addTeacher(new Teacher(attr[1], Integer.parseInt(attr[2]), Integer.parseInt(attr[3]), attr[4],
-                            Integer.parseInt(attr[5]), attr[6], attr[7]));
-                }
-            }
-            verifyDean();
-
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        } catch (DepartmentException e) {
-            System.out.println(e.getMessage());
+        try (FileInputStream fos = new FileInputStream(tFile);
+                ObjectInputStream ois = new ObjectInputStream(fos)) {
+                this.teachers = (List<Teacher>) ois.readObject();
+            
+        } catch (FileNotFoundException ex) {
+            System.out.println("The file " + name + " does not exist!");
+        } catch (IOException ex) {
+            System.out.println("An error has occurred while loading the file" + name + ".");
+        } catch (ClassNotFoundException ex) {
+            System.out.println("You should never see this!");
+        }
+        
+        try (FileInputStream fos = new FileInputStream(sFile);
+                ObjectInputStream ois = new ObjectInputStream(fos)) {
+                this.staff = (List<Staff>) ois.readObject();
+            
+        } catch (FileNotFoundException ex) {
+            System.out.println("The file " + name + " does not exist!");
+        } catch (IOException ex) {
+            System.out.println("An error has occurred while loading the file" + name + ".");
+        } catch (ClassNotFoundException ex) {
+            System.out.println("You should never see this!");
         }
 
-        System.out.println("Department loaded from " + name);
+        
     }
 
     /**
@@ -115,25 +150,22 @@ public class Department {
      * @param name File to save to.
      */
     public void saveDept(String name) {
-        File deptFile = new File(name);
-        StringBuilder sb = new StringBuilder();
-        try (FileWriter fw = new FileWriter(deptFile)) {
-            for (Teacher t : teachers) {
-                sb.append(t.toString()).append("\n");
-            }
-            for (Person p : staff) {
-                sb.append(p.toString()).append("\n");
-            }
-            fw.write(sb.toString());
-
-            verifyDean();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (DepartmentException e) {
-            System.out.println(e.getMessage());
+        File tFile = new File(name + "_teachers.ser");
+        File sFile = new File(name + "_staff.ser");
+        
+        try (FileOutputStream fos = new FileOutputStream(tFile);
+                ObjectOutputStream oos = new ObjectOutputStream(fos)) {
+                    oos.writeObject(teachers);
+        } catch (IOException ex) {
+            ex.getMessage();
         }
-
-        System.out.println("Department saved to " + name);
+        
+        try (FileOutputStream fos = new FileOutputStream(sFile);
+                ObjectOutputStream oos = new ObjectOutputStream(fos)) {
+                    oos.writeObject(staff);
+        } catch (IOException ex) {
+            ex.getMessage();
+        }
     }
 
     /**
@@ -141,12 +173,11 @@ public class Department {
      * @param id Staff ID to check for
      * @return Whether staff member is currently in the department.
      */
-    private boolean staffMemberExists(String id) {
+    private boolean staffMemberExists(int id) {
         if (staff == null || staff.isEmpty())
             return false;
-        int parsedId = Integer.parseInt(id);
         for (Staff s : staff) {
-            if (s.getId() == parsedId) {
+            if (s.getId() == id) {
                 return true;
             }
         }
@@ -174,13 +205,16 @@ public class Department {
      * @return Whether there is a valid dean in the department
      */
     public boolean verifyDean() {
+        if (teachers == null) 
+            return false;
         for (Teacher t : teachers) {
             if (t.getId() == deanId) {
                 dean = t;
                 return true;
             }
         }
-        throw new DepartmentException("No dean found!");
+        System.out.println("No dean found!");
+        return false;
     }
     @Override
     public String toString() {

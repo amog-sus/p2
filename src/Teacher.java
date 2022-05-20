@@ -88,6 +88,6 @@ public class Teacher extends Person implements Payable {
      */
     @Override
     public double determineBonus() {
-        return (!degree.equals("Bachelor")) ? 150 * (5 + ((fullTime) ? 1 : 0)) : 250;
+        return (!degree.equals("Bachelor")) ? 150 * (5 + ((fullTime) ? 4 : 0)) : 250;
     }
 }

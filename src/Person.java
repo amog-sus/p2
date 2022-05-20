@@ -1,7 +1,10 @@
+
+import java.io.Serializable;
+
 /**
  * Basic Person class, with some characteristics and an abstract method.
  */
-public abstract class Person {
+public abstract class Person implements Serializable {
 
     private String name;
     private int age;
